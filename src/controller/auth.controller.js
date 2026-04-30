@@ -59,5 +59,68 @@ const verifyOTP=async(req,res)=>{
         })
     }
 }
+const resendOTP=async(req,res)=>{
+    const {email}=req.body
+    try{
+    const user=await userModel.findOne({
+        email:email
+    })
+    if(!user){
+        return res.status(404).json({
+            message:"user not found"
+        })
+    }
+    if(user.isVerified){
+        return res.status(401).json({message:"user is already verified"})
+    }
+    const otp=await otpService.saveOTP(email)
+    await sendOTPEmail(email,otp)
 
-module.exports={register,verifyOTP}
+    res.status(201).json({
+        message:"OTP sent successfully"
+    })
+}catch(err){
+    console.log(err)
+    res.status(500).json(err)
+}
+
+}
+
+const login=async(req,res)=>{
+    const {email,password}=req.body
+    try{
+        const user=await userModel.findOne({
+        email:email
+        })
+        if(!user){
+            return res.status(404).json({
+                message:"user not found"
+            })
+        }
+        if(!user.isVerified){
+            return res.status(403).json({
+                message:"User not Verified yet"
+            })
+        }
+        const isMatched=await bcrypt.compare(password,user.password)
+        if(!isMatched){
+            return res.status(401).json({
+                message:"Invalid Email or password"
+            })
+        }
+        const token=jwt.sign({
+            id:user._id
+        },JWT_SECRET,{
+            expiresIn:'1d'
+        })
+         res.cookie('token', token)
+    
+    }catch(err){
+        console.log(err)
+        res.status(500).json({
+            message:"Internal Server error"
+        })
+    }
+}
+
+module.exports={register,verifyOTP,resendOTP}
