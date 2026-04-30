@@ -122,5 +122,27 @@ const login=async(req,res)=>{
         })
     }
 }
+const me = async (req, res) => {
+  try {
+    // 1. .lean() makes the query faster by returning a plain JS object
+    // 2. req.user.id is populated by your auth middleware
+    const user = await userModel.findById(req.user.id)
+      .select('-password')
+      .lean();
 
-module.exports={register,verifyOTP,resendOTP}
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Wrap in an object for consistent API responses
+    return res.status(200).json({ 
+      success: true,
+      user 
+    });
+
+  } catch (err) {
+    console.error("Profile Fetch Error:", err);
+    return res.status(500).json({ message: 'Server error' });
+  }
+};
+module.exports={register,verifyOTP,resendOTP,login,me}
