@@ -76,7 +76,7 @@ const resendOTP=async(req,res)=>{
     const otp=await otpService.saveOTP(email)
     await sendOTPEmail(email,otp)
 
-    res.status(201).json({
+    res.status(200).json({
         message:"OTP sent successfully"
     })
 }catch(err){
@@ -110,11 +110,19 @@ const login=async(req,res)=>{
         }
         const token=jwt.sign({
             id:user._id
-        },JWT_SECRET,{
+        },process.env.JWT_SECRET,{
             expiresIn:'1d'
         })
-         res.cookie('token', token)
-    
+         res.cookie('token', token,{
+            httpOnly:true,
+            maxAge:24 * 60 * 60 * 1000
+         })
+         res.status(200).json({
+            user:{
+                id:user._id,
+                username:user.username
+            }
+         })
     }catch(err){
         console.log(err)
         res.status(500).json({
