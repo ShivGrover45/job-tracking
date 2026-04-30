@@ -1,7 +1,7 @@
 const bcrypt=require('bcryptjs')
 const jwt=require('jsonwebtoken')
 const userModel = require('../models/user.model')
-const { saveOTP } = require('../services/otp.service')
+const otpService = require('../services/otp.service')
 const{sendOTPEmail,sendFollowUpReminder}=require('../services/mail.services')
 const register=async(req,res)=>{
     const{username,email,password}=req.body
@@ -20,7 +20,7 @@ const register=async(req,res)=>{
             email:email,
             password:hashedPassword
         })
-        const otp=await saveOTP(email)
+        const otp=await otpService.saveOTP(email)
         await sendOTPEmail(email,otp)
 
         res.status(201).json({
@@ -35,4 +35,29 @@ const register=async(req,res)=>{
     }
 }
 
-module.exports=register
+const verifyOTP=async(req,res)=>{
+    const {email,otp}=req.body
+    try{
+        const isValid=await otpService.verifyOTP(email,otp)
+        if(!isValid){
+            return res.status(401).json({
+                message:"Otp expired"
+            })
+        }
+        await userModel.findOneAndUpdate({
+            email
+        },{isVerified:true})
+
+        res.status(200).json({
+            message:"User verified successfully"
+        })
+
+    }catch(err){
+        console.log(err)
+        res.status(500).json({
+            err
+        })
+    }
+}
+
+module.exports={register,verifyOTP}
