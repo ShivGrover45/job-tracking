@@ -44,3 +44,35 @@ const getJobs=async(req,res)=>{
         })
     }
 }
+
+const getJob=async(req,res)=>{
+    const user=req.user.id
+    const id=req.params.id
+    try{
+        const job=await jobModel.findOne({_id:id,user:user})
+        if(!job){
+            return res.status(404).json({
+                message:"Job not Found"
+            })
+        }
+        res.status(200).json({
+            message:"job fetched successfully",
+            job
+        })
+    }catch(err){
+        console.log(err)
+        return res.status(500).json({
+            message:"internal server error",
+            err
+        })
+    }
+}
+
+const updateJob=async(req,res)=>{
+    const id=req.params.id
+    const {}=req.body
+}
+
+module.exports={
+    createJob,getJobs,getJob
+}
