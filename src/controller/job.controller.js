@@ -1,3 +1,4 @@
+const { JsonWebTokenError } = require('jsonwebtoken')
 const jobModel=require('../models/job.model')
 const createJob=async(req,res)=>{
     const{company, role, jobUrl, appliedDate, followUpDate}=req.body
@@ -70,9 +71,51 @@ const getJob=async(req,res)=>{
 
 const updateJob=async(req,res)=>{
     const id=req.params.id
-    const {}=req.body
+    const {company,role,status,jobUrl,appliedDate,followUpDate}=req.body
+    try{
+        const update = {}
+    if (company) update.company = company
+    if (role) update.role = role
+    if (status) update.status = status
+    if (jobUrl) update.jobUrl = jobUrl
+    if (appliedDate) update.appliedDate = appliedDate
+    if (followUpDate) update.followUpDate = followUpDate
+    const updatedJob=await jobModel.findOneAndUpdate({_id:id,user:req.user.id},update,{new:true})
+    res.status(200).json({
+        message:"Updated Successfully",
+        updatedJob
+    })
+    }catch(err)
+    {
+        return res.status(500).json(
+            err
+        )
+    }
+}
+
+const deleteJob=async(req,res)=>{
+    const id=req.params.id
+    const user=req.user.id
+    try{
+    const job=await jobModel.findOne({_id:id,user:user})
+    if(!job){
+        return res.status(404).json({
+            message:"job not found"
+        })
+    }
+    await jobModel.findOneAndDelete({_id:id,user:user})
+    res.status(200).json(
+        {
+            message:"Deleted Successfully"
+        }
+    )
+}catch(err){
+    return res.status(500).json({
+        err
+    })
+}
 }
 
 module.exports={
-    createJob,getJobs,getJob
+    createJob,getJobs,getJob,updateJob
 }
