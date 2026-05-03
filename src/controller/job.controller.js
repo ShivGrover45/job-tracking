@@ -116,6 +116,32 @@ const deleteJob=async(req,res)=>{
 }
 }
 
+const addInterview=async(req,res)=>{
+    const id=req.params.id
+    const {round,date,mode,interviewer,questions,outcome,notes}=req.body
+    try{
+        const job=await jobModel.findOneAndUpdate({
+            _id:id,user:req.user.id
+        },{$push:{interviews:{round,date,mode,interviewer,questions,outcome,notes}}},{
+            new:true
+        })
+        if(!job){
+            return res.status(404).json({
+                message:"Job not found"
+            })
+        }
+        res.status(200).json({
+            job
+        })
+        
+    }catch(err){
+        console.log(err)
+        return res.status(500).json({
+            message:"Internal Server error"
+        })
+    }
+}
+
 module.exports={
     createJob,getJobs,getJob,updateJob
 }
