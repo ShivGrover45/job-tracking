@@ -20,6 +20,13 @@ process.on('uncaughtException', (err) => {
 
 const port = process.env.PORT || 3000;
 connectDb()
+
+app.get('/',(req,res)=>{
+    res.json({
+        message:"Health Status:fine"
+    })
+})
+
 app.listen(port, () => {
     console.log(`Server Started Successfully on port ${port}`);
 });

@@ -35,7 +35,7 @@ const register=async(req,res)=>{
     }
 }
 
-const verifyOTP=async(req,res)=>{
+const verify_OTP=async(req,res)=>{
     const {email,otp}=req.body
     try{
         const isValid=await otpService.verifyOTP(email,otp)
@@ -153,4 +153,4 @@ const me = async (req, res) => {
     return res.status(500).json({ message: 'Server error' });
   }
 };
-module.exports={register,verifyOTP,resendOTP,login,me}
+module.exports={register,verify_OTP,resendOTP,login,me}

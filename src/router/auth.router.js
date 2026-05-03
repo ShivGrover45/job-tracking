@@ -1,5 +1,5 @@
 const express=require('express')
-const {register, verifyOTP, resendOTP, login, me} =require('../controller/auth.controller')
+const {register, verify_OTP, resendOTP, login, me} =require('../controller/auth.controller')
 const auth=require('../middleware/auth.middleware')
 const {body}=require('express-validator')
 
@@ -18,7 +18,7 @@ const loginValidation = [
 ]
 
 authRouter.post('/register',registerValidation,register)
-authRouter.post('/verify-otp',verifyOTP)
+authRouter.post('/verify-otp',verify_OTP)
 authRouter.post('/resend-otp',resendOTP)
 authRouter.post('/login',loginValidation,login)
 authRouter.get('/me',auth,me)
