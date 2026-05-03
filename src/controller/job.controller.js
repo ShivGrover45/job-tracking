@@ -131,6 +131,7 @@ const addInterview=async(req,res)=>{
             })
         }
         res.status(200).json({
+            message:"Job added",
             job
         })
         
@@ -142,6 +143,32 @@ const addInterview=async(req,res)=>{
     }
 }
 
+const addNote=async(req,res)=>{
+    const id=req.params.id
+    const user=req.user.id
+    const {text}=req.body
+    try{
+        const job=await jobModel.findOneAndUpdate({_id:id,user:user},{$push:{notes:{text}}}
+            ,{new:true}
+        )
+        if(!job){
+            return res.status(404).json({
+                message:"Job not found"
+            })
+        }
+        res.status(200).json({
+            message:"notes added",
+            job
+        })
+    }catch(err){
+        return res.status(500).json(
+            {
+                message:"Internal server error"
+            }
+        )
+    }
+}
+
 module.exports={
-    createJob,getJobs,getJob,updateJob
+    createJob,getJobs,getJob,updateJob,deleteJob,addInterview,addNote
 }
