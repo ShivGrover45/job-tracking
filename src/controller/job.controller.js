@@ -1,4 +1,4 @@
-const { JsonWebTokenError } = require('jsonwebtoken')
+const mongoose=require('mongoose')
 const jobModel=require('../models/job.model')
 const createJob=async(req,res)=>{
     const{company, role, jobUrl, appliedDate, followUpDate}=req.body
@@ -168,7 +168,86 @@ const addNote=async(req,res)=>{
         )
     }
 }
+const updateInterview=async(req,res)=>{
+    const jobId=req.params.jobId
+    const user=req.user.id
+    const interviewId=req.params.interviewId
+    try{
+         const allowedFields = ['round', 'date', 'mode', 'interviewer', 'questions', 'outcome', 'notes']
+         const update={}
+         allowedFields.forEach(field=>{
+            if(req.body[field]!==undefined){
+                update[`interviews.$.${field}`] = req.body[field]
+            }
+         }
+         )
+             const job = await jobModel.findOneAndUpdate(
+      { _id: jobId, user, 'interviews._id': interviewId },
+      { $set: update },
+      { new: true }
+    )
 
+    if (!job) {
+      return res.status(404).json({ message: 'Job or interview not found' })
+    }
+
+    res.status(200).json({ message: 'Interview updated', job })
+    }catch(err){
+        console.log(err)
+        return res.status(500).json(
+            {
+                message:"user not found"
+            }
+        )
+    }
+}
+
+const getStats = async (req, res) => {
+  try {
+    const userId = req.user.id
+
+    // Stage 1 — total count
+    const total = await jobModel.countDocuments({ user: userId })
+
+    // Stage 2 — count by status
+    const byStatus = await jobModel.aggregate([
+      { 
+        $match: { user: new mongoose.Types.ObjectId(userId) } 
+      },
+      { 
+        $group: { 
+          _id: '$status',    // group by status field
+          count: { $sum: 1 } // count each group
+        } 
+      },
+      { 
+        $sort: { count: -1 } // highest count first
+      }
+    ])
+
+    // Stage 3 — calculate response rate
+    // Response = anything beyond "applied" or "ghosted"
+    const responded = await jobModel.countDocuments({
+      user: userId,
+      status: { $in: ['screening', 'interview', 'offer', 'rejected'] }
+    })
+
+    const responseRate = total > 0 
+      ? ((responded / total) * 100).toFixed(1) + '%'
+      : '0%'
+
+    res.status(200).json({
+      total,
+      byStatus,
+      responded,
+      responseRate
+    })
+
+  } catch (err) {
+    console.error(err)
+    return res.status(500).json({ message: 'Internal server error' })
+  }
+}
 module.exports={
-    createJob,getJobs,getJob,updateJob,deleteJob,addInterview,addNote
+    createJob,getJobs,getJob,updateJob,deleteJob,addInterview,addNote,getStats,updateInterview
 }
